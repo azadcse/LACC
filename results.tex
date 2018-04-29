@@ -63,7 +63,7 @@ Isolate genomes	&	12	&	650			&	260		\\
 \section{Results}
 \label{sec:results}
 
-\subsection{Computational platforms} 
+\subsection{Evaluation platforms} 
 We evaluate the performance of LACC on NERSC/Edison and NERSC/Cori (KNL) systems  as described in Table~\ref{tab:machines}.
 We used OpenMP for multithreaded execution in our code. 
 In our experiments, we only used square process grids because rectangular grids are not supported in CombBLAS~\cite{bulucc2011combinatorial}. 
@@ -73,31 +73,19 @@ In our hybrid OpenMP-MPI implementation, all MPI processes perform local computa
 Local computation in every matrix-algebraic kernel is fully multithreaded using OpenMP.
 Only one thread in every process makes MPI calls in the communication rounds (that is \texttt{MPI\_THREAD\_FUNNELED} thread support is used in \texttt{MPI\_Init\_thread} function call).
 
-\subsection{Test problems} 
-Table~\ref{table:problem-statistics} describes two protein similarity networks used to evaluate the connected component algorithms.
-These networks were generated from proteins from the isolate genomes hosted
-by the IMG platform at the Joint Genome Institute (JGI). For each dataset, we used the sequence aligner LAST~\cite{kielbasa2011adaptive} in order to construct the all-against-all adjacency matrix
-by keeping all similarities above 30\% and at 70\% length coverage bidirectionally between the longest and shortest aligned sequences. 
-These two networks were part of a larger collection protein similarity networks  used to evaluate HipMCL~\cite{hipmcl}. 
-
-
 \begin{figure}[!t]
    \centering
    \includegraphics[scale=.5]{figures/eukarya} % requires the graphicx package
-   \caption{Strong scaling of LACC and Parconnect when finding connected components in  the eukarya protein similarity network. }
+   \caption{Strong scaling of LACC and parconnect~\cite{jain2017adaptive} when finding connected components in  the eukarya protein similarity network. }
    \label{fig:eukarya}
 \end{figure}
 
 \begin{figure}[!t]
    \centering
    \includegraphics[scale=.5]{figures/isolates} % requires the graphicx package
-   \caption{Strong scaling of LACC and Parconnect when finding connected components in  the isolate genomes protein similarity network. }
+   \caption{Strong scaling of LACC and parconnect~\cite{jain2017adaptive} when finding connected components in  the isolate genomes protein similarity network. }
    \label{fig:isolates}
 \end{figure}
-
-
-\subsection{Performance of LACC with respect to the state-of-the-art}
-
 
 \begin{figure*}[!t]
    \centering
@@ -106,6 +94,44 @@ These two networks were part of a larger collection protein similarity networks 
    \label{fig:hipmcl}
 \end{figure*}
 
+
+\subsection{Test problems} 
+Table~\ref{table:problem-statistics} describes two protein similarity networks used to evaluate the connected component algorithms.
+These networks were generated from proteins from the isolate genomes hosted
+by the IMG platform at the Joint Genome Institute (JGI). For each dataset, we used the sequence aligner LAST~\cite{kielbasa2011adaptive} in order to construct the all-against-all adjacency matrix
+by keeping all similarities above 30\% and at 70\% length coverage bidirectionally between the longest and shortest aligned sequences. 
+These two networks were part of a larger collection protein similarity networks  used to evaluate HipMCL~\cite{hipmcl}. 
+
+
+
+
+
+
+
+
+\subsection{Performance of LACC with respect to the state-of-the-art}
+We compare the performance of LACC with a parconnect~\cite{jain2017adaptive}, a recently developed distributed-memory connected component algorithm. 
+Parconnect is based on the Shiloach-Vishkin algorithm and has been shown to outperform previous state-of-the art parallel connected component algorithms~\cite{slota2014bfs}.
+
+Figure \ref{fig:eukarya} and \ref{fig:isolates} shows the runtime of LACC and parconnect when finding connected components in eukarya and isolate-genome networks, respectively.
+These results shows that on these two networks, LACC outperforms parconnect by more than a factor of two on all concurrencies.
+The performance gap is more significant on low concurrencies (on 4 nodes or 272 cores) where LACC is $~8\times$ faster than parconnect.
+The better performance of LACC on low concurrency indicates that our linear algebraic primitives are well optimized for single-node performance of the Awerbuch-Shiloach algorithm.
+However, we might need to adapt the primitives to better capture the computational patterns of the Awerbuch-Shiloach algorithm. 
+For example, the conditional hooking (Algorithm~\ref{algo:condHook}) can be better captured by a bottom up search from vertices belonging to stars, which could avoid some redundant work performed in SpMV.
+Furthermore, our empirical results show that SpMV scales by a factor of $\sqrt{p}$ when the number of processes is increased by a factor of $p$.
+We will continue to improve LACC to improve its performance on high concurrencies. 
+
+
+
 \subsection{Performance of LACC when used in Markov clustering}
+Our primary application driver is the distributed-memory Markov clustering algorithm, HipMCL.
+In this section, we show how LACC impacts the performance of HipMCL.
+To show the performance improvement, we compare the performance of HipMCL with the original shared-memory parallel implementation of MCL by Van Dongen~\cite{van2000graph}. 
+Figure~\ref{fig:hipmcl} breaks the runtimes of MCL and HipMCL into five groups where the last column shows the runtime of identifying connected components when clustering the eukarya network. 
+Figure~\ref{fig:hipmcl} shows that on one thousands nodes of Edison, LACC runs $3288\times$ faster than the default connected component code in MCL. 
+This dramatic performance improvement makes connected component the least expensive module of HipMCL.
+Therefore, LACC serves our target application quite nicely by using the existing parallel operations provided by CombBLAS. 
+
 
 

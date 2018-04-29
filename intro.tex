@@ -2,7 +2,7 @@
 Given an undirected graph $G(V, E)$ on the set of vertices $V$ and the set of edges $E$, a connected component is a subgraph in which every vertex is connected to all other vertices in the subgraph by paths and is not connected to any other vertex outside of the subgraph.  
 Finding all connected components in an undirected graph is a well studied problem in graph theory with applications in bioinformatics and scientific computing. 
 
-One particular application of connected components arises in large scale biological network clustering my Markov Clustering algorithm (MCL)~\cite{van2000graph}. 
+One particular application of connected components arises in large scale biological network clustering by Markov Clustering algorithm (MCL)~\cite{van2000graph}. 
 MCL iteratively performs a series of sparse matrix manipulations to identify the clustering structure in a network. 
 After the iterations converge, the clusters are extracted by finding the weakly-connected components of the final converged matrix.  This is equivalent to finding connected components on the symmetrized version of the final converged matrix, i.e., in an undirected graph represented by the converged matrix. 
 In an effort to cluster large-scale networks, we have recently developed the distributed-memory parallel MCL (HipMCL)~\cite{hipmcl} algorithm.

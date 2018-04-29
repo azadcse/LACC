@@ -126,7 +126,10 @@ In LACC, we use Select2nd as semiring multiply, which returns the second value i
 We use min as semiring add, which returns the minimum of the two operand it is passed.
 Hence, we use (Select2nd, min) semiring throughout our SpMV algorithms. 
 Algorithm~\ref{algo:Sel2ndMin} describes how this semiring can be created using GraphBLAS C API.
-The BFS semiring is definedover two sets: the matrix elements are from the set of binarynumbers whereas the vector elements are from the set ofintegers.
+The BFS semiring is defined
+over two sets: the matrix elements are from the set of binary
+numbers whereas the vector elements are from the set of
+integers.
 
 \begin{algorithm}[htbp]
 \begin{algorithmic}[1]
@@ -176,7 +179,7 @@ Finally, the GrB\_assign function updates the parents of the roots of stars when
 \label{algo:condHook}
 \end{algorithm}
 
-\subsection{Conditional hooking}
+\subsection{Unconditional hooking}
 Algorithm~\ref{algo:uncondHook} describes how we designed the unconditional hooking using three GraphBLAS operations.
 As shown in Algorithm~\ref{algo:Awerbuch-Shiloach},  unconditional hooking is very similar to conditional hooking  with the only different is that unconditional hooking allows a star to hook with any other tree without any restriction on the order of vertices.
 However, unlike conditional hooking where a star can hook to another star or nonstar, conditional hooking enables hooking a star onto a nonstar only. 
@@ -214,6 +217,60 @@ Finally, the GrB\_assign function updates the parents of the roots of stars when
 {\bf Output:} Updated parent array $f$.}
 \label{algo:uncondHook}
 \end{algorithm}
+
+
+\begin{algorithm}[htbp]
+\begin{algorithmic}[1]
+\begin{small}
+\Procedure{Shortcut}{$f$}
+	\LineComment{\textcolor{blue}{Step1: find grandfathers ($\id{gf} \gets f[f] $) }}
+	\State GrB\_extract (\id{gf}, GrB\_NULL, GrB\_NULL,  $f$,  $f$, 0, GrB\_NULL) 
+	\LineComment{\textcolor{blue}{Step2:  $f \gets \id{gf}$}).}
+	\State GrB\_assign ($f$, GrB\_NULL,  GrB\_NULL,  GrB\_ALL,  \id{gf},  size($f$), GrB\_NULL) 
+ \EndProcedure
+\end{small}
+\end{algorithmic}
+\caption{Shortcutting using GrB\_extract and GrB\_assign.  {\bf Inputs:} a dense vector $f$ storing the parents of all vertices.
+{\bf Output:} Updated parent array $f$.}
+\label{algo:shortcut}
+\end{algorithm}
+
+
+\subsection{Shortcutting}
+Algorithm~\ref{algo:shortcut} describes how we designed the shortcutting using two GraphBLAS operations.
+At first, we use  GrB\_extract to obtain the grand parent \id{gf} of every vertex. Next, we assign \id{gf} to the parent array by using the GrB\_assign operation.
+
+
+\section{Implementing the Awerbuch-Shiloach algorithm in CombBLAS}
+We use the CombBLAS framework~\cite{bulucc2011combinatorial} to implement the GraphBLAS primitives needed to implement the Awerbuch-Shiloach algorithm.
+Since CombBLAS does not directly support the masking operations, we filtered out the output after performing an operation (if masking is needed). 
+
+CombBLAS distributes its sparse matrices on a 2D $p_r \times p_c$ processor grid.
+Processor $P(i,j)$ stores the submatrix $\mA_{ij}$ of dimensions $(m/p_r)\times (n/p_c)$ in its local memory. 
+The CombBLAS uses the doubly compressed sparse columns (DCSC) format to store its local submatrices for scalability, 
+and uses a vector of \{index, value\} pairs for storing sparse vectors. 
+To balance load across processors, we randomly permute the input matrix $\mA$ before running the matching algorithms.
+
+Vectors are also distributed on the same 2D processor grid. 
+For a distributed vector $v$, the syntax $v_{ij}$ denotes the local $n/p$ length piece of the vector owned by the $P(i, j)$th processor. 
+The syntax $v_i$ denotes the hypothetical $n/p_r$ or $n/p_c$ length piece of the vector collectively owned by all the processors along the $i$th processor row $P(i, :)$ or column $P(:, i)$.
+
+
+\subsection{Analysis of the distributed algorithm}
+We measure communication by the number of {\em words} moved ($W$) and
+the number of {\em messages} sent ($S$). The cost of communicating a length $m$ message is $\alpha + \beta m$ where $\alpha$ is the
+latency and $\beta$ is the inverse bandwidth, both defined relative to the cost of a single arithmetic operation. Hence, an algorithm that
+performs $F$ arithmetic operations, sends $S$ messages, and moves $W$ words takes $T= F + \alpha S + \beta W$ time. 
+
+We previously analyzed~\cite{azad2016distributed} the complexity of SpMV because it is also a building block of parallel maximal matching algorithms.
+For ease of analysis, we assume that nonzeros are i.i.d. distributed in matrices and vectors. %,  $x$ is $\id{f}$ percent full, and $\mA$ has on average $d$ nonzeros per column. 
+We also assume a square processor grid $p_c{=}p_r{=}\sqrt{p}$. Number of iterations is denoted by $\left\vert{\mathrm{iters}} \right\vert$.
+
+%We leverage the 2D SpMV algorithms implemented in CombBLAS.
+%The complexity of the parallel SpMSpV algorithm has been analyzed in this context recently~\cite{matchingipdps16}, hence we just state
+%the result here: 
+% $$ T_{ \Call{SpMV}{}}  = O \Bigl( \frac{m}{p} +  \beta  \bigl ( \frac{m}{p} + \frac{n}{\sqrt{p}} \bigr ) +  \left\vert{\mathrm{iters}} \right\vert \alpha \sqrt{p} \Bigr) .$$
+ 
 
 
 

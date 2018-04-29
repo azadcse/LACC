@@ -3,29 +3,29 @@
 \setlength{\tabcolsep}{5pt}
 \begin{table}[!t]{
 \centering
-\begin{tabular}{rc}
-					&  {\bf Cori}  \\
-					& ({\bf Intel KNL}) 	\\
+\begin{tabular}{rcc}
+					&  {\bf Cori} & {\bf Edison }    \\
+					& ({\bf Intel KNL})  & ({\bf Intel Ivy Bridge})		\\
 \hline%----------------------------------------------------------------------------
-{\bf Core }	 	 & 			\\
+{\bf Core }	 	 & 			& \\
 
 \hline%----------------------------------------------------------------------------
-Clock (GHz)			& 1.4						\\
-L1 Cache (KB)		& 32					\\
-L2 Cache (KB)		& 1024$^1$				\\
-DP GFlop/s/core		& 44					\\
+Clock (GHz)			& 1.4			& 2.4					\\
+L1 Cache (KB)		& 32		& 32				\\
+L2 Cache (KB)		& 1024$^1$		& 256				\\
+DP GFlop/s/core		& 44			&19.2		\\
 \hline%----------------------------------------------------------------------------
-{\bf Node Arch.}	 	 & 			 \\
+{\bf Node Arch.}	 	 & 			& \\
 \hline%----------------------------------------------------------------------------
-Sockets/node			&  1							\\
-Cores per socket			& 64							\\
-STREAM BW$^2$		&  102~GB/s 		\\
-Memory per node		&  96~GB				\\
+Sockets/node			&  1		&	2					\\
+Cores per socket			& 64				& 12					\\
+STREAM BW$^2$		&  102~GB/s 	&	104~GB/s		\\
+Memory per node		&  96~GB	&	64~GB			\\
 \hline%-------------------------------------------------------------------------
-{\bf Prog. Environment}	 	 & 			 \\
+{\bf Prog. Environment}	 	 & 			& \\
 \hline%----------------------------------------------------------------------------
-Compiler & gcc 5.3.0 \\
-Optimization & -O3  \\
+Compiler & gcc 5.3.0 & gcc 5.3.0\\
+Optimization & -O3 &  -O3 \\
 \hline%----------------------------------------------------------------------------
 \end{tabular}
 
@@ -76,11 +76,11 @@ Optimization & -O3  \\
 \label{sec:results}
 
 \subsection{Experimental Setup} 
-We evaluate the performance of LACC on NERSC/Cori using the KNL processors as described in Table~\ref{tab:machines}.
+We evaluate the performance of LACC on NERSC/Edison and NERSC/Cori (KNL) systems  as described in Table~\ref{tab:machines}.
 We used OpenMP for multithreaded execution in our code. 
 In our experiments, we only used square process grids because rectangular grids are not supported in CombBLAS~\cite{bulucc2011combinatorial}. 
 When $p$ cores are allocated for an experiment, we create a $\sqrt{p/t} \times \sqrt{p/t} $ process grid where $t$ is the number of threads per process.
-Unless otherwise stated, all of our experiments used 16 threads per MPI process.
+Unless otherwise stated, all of our experiments on Cori used 16 threads per MPI process.
 In our hybrid OpenMP-MPI implementation, all MPI processes perform local computation followed by synchronized communication rounds. 
 Local computation in every matrix-algebraic kernel is fully multithreaded using OpenMP.
 Only one thread in every process makes MPI calls in the communication rounds (that is \texttt{MPI\_THREAD\_FUNNELED} thread support is used in \texttt{MPI\_Init\_thread} function call).
@@ -131,6 +131,13 @@ Sorted vectors also ensure fairness when comparing our algorithm with existing a
    \caption{Strong scaling of LACC and Parconnect when finding connected components in  the isolate genomes protein similarity network. }
    \label{fig:multiply_nnzx}
 \end{figure}
+
+\begin{figure*}[!t]
+   \centering
+   \includegraphics[scale=.5]{figures/hipmcl} % requires the graphicx package
+   \caption{Performance improvement by LACC when used in HipMCL over the default shared-memory CC algorithm used in MCL. This result is obtained when clustering eukaryotic network with 3 million nodes and 359 million edges on NERSC/Edison.}
+   \label{fig:hipmcl}
+\end{figure*}
 
 
 

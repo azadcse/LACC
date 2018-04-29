@@ -51,4 +51,9 @@ B.~Awerbuch and Y.~Shiloach, ``New connectivity and msf algorithms for
 Y.~Shiloach and U.~Vishkin, ``An {$O(\log n)$} parallel connectivity
   algorithm,'' Computer Science Department, Technion, Tech. Rep., 1980.
 
+\bibitem{kielbasa2011adaptive}
+S.~M. Kie{\l}basa, R.~Wan, K.~Sato, P.~Horton, and M.~C. Frith, ``Adaptive
+  seeds tame genomic sequence comparison,'' \emph{Genome research}, vol.~21,
+  no.~3, pp. 487--493, 2011.
+
 \end{thebibliography}

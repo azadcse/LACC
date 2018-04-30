@@ -97,7 +97,7 @@ The Awerbuch-Shiloach algorithm begins with singleton trees (stars) correspondin
 In every iteration, the algorithm merges stars with other trees (both stars and nonstars) until no such merging is possible. 
 This merging is called ``hooking" in the Awerbuch-Shiloach algorithm and is performed in two steps: (a) conditional hooking and (b) unconditional hooking. These steps are described below.
 Between two subsequent iterations, the algorithm reduces the hight of trees by pointer jumping, a process known as shortcutting. 
-Note that the Awerbuch-Shiloach algorithm is a simplification of the Shiloach-Vishkin algorithm~\cite{shiloach1980log}. While Shiloach-Vishkin allows hooking a tree to another tree, Awerbuch-Shiloach only allows hooking a star onto another tree. Hooking stars instead of trees simplifies the hooking process and eliminate the need of some auxiliary data structures needed by the Shiloach-Vishkin algorithm.
+Note that the Awerbuch-Shiloach algorithm is a simplification of the Shiloach-Vishkin algorithm~\cite{shiloach1980log}. While Shiloach-Vishkin allows hooking a tree onto another tree, Awerbuch-Shiloach only allows hooking a star onto another tree. Hooking stars instead of trees simplifies the hooking process and eliminate the need of some auxiliary data structures needed by the Shiloach-Vishkin algorithm.
 
 In the Awerbuch-Shiloach algorithm, vertex $u$ maintains a parent $f[u]$ which is another vertex or itself. 
 This parent-child relationship forms a directed forest where the root $u$ of a tree satisfies $f[u]=u$.
@@ -128,16 +128,12 @@ For this purpose, we relied upon several GraphBLAS primitives as defined in its 
 The implementation details of these primitives (using the Combinatorial BLAS library) will be discussed in the next section.
 
 We use three GraphBLAS operations to design the Awerbuch-Shiloach algorithm: (a) GrB\_mxv to perform sparse matrix-vector multiplication, (b) GrB\_extract for extracting some elements of a vector and (c) GrB\_assign for assigning elements of a vector to a destination vector. 
-The conditional and unconditional hooking operations in the Awerbuch-Shiloach algorithm traverses the neighbors of a subset of vertices  in the graph. This operation can be captured by sparse matrix-vector (SpMV) product on an appropriate semiring.  
-We refer to a semiring by listing its scaling operations, such as the (multiply, add) semiring. 
+The conditional and unconditional hooking operations in the Awerbuch-Shiloach algorithm traverse the neighbors of a subset of vertices  in the graph. This operation can be captured by sparse matrix-vector (SpMV) product on an appropriate semiring.  
+We refer to a semiring by listing its scaler operations, such as the (multiply, add) semiring. 
 In LACC, we use Select2nd as semiring multiply, which returns the second value it is passed. 
-We use min as semiring add, which returns the minimum of the two operand it is passed.
-Hence, we use (Select2nd, min) semiring throughout our SpMV algorithms. 
+We use min as semiring add, which returns the minimum of the two operands it is passed.
+Hence, we use (Select2nd, min) semiring in our SpMV algorithms. 
 Algorithm~\ref{algo:Sel2ndMin} describes how this semiring can be created using GraphBLAS C API.
-The BFS semiring is defined
-over two sets: the matrix elements are from the set of binary
-numbers whereas the vector elements are from the set of
-integers.
 
 \begin{algorithm}[htbp]
 \begin{algorithmic}[1]
@@ -158,10 +154,10 @@ integers.
 
 
 \subsection{Conditional hooking}
-Algorithm~\ref{algo:condHook} describes how we designed the conditional hooking using three GraphBLAS operations.
-GrB\_mxv in  Algorithm~\ref{algo:condHook} multiply the adjacency matrix $\mA$ of the graph by the parent vector $f$ on a (Select2nd, min) semiring. Since we only care about output vertices belonging to stars, we masked the output in GrB\_mxv by the Boolean vector \id{star}.
-The output of GrB\_mxv is stored in $f_n$.  $f_n[v]$ stores the minimum parent of an adjacent vertex of $v$ where \id{star[v]} is true.  
-Next, the GrB\_extract function extracts the parents of vertices in a star. Here we again use the \id{star} vector as an output mask.
+Algorithm~\ref{algo:condHook} describes how we designed conditional hooking using three GraphBLAS operations.
+GrB\_mxv in  Algorithm~\ref{algo:condHook} multiplies the adjacency matrix $\mA$ of the graph by the parent vector $f$ on a (Select2nd, min) semiring. Since we only care about output vertices belonging to stars, we masked the output in GrB\_mxv by the Boolean vector \id{star}.
+The output of GrB\_mxv is stored in $f_n$.  $f_n[v]$ stores the minimum parent of a vertex adjacent to $v$ such that $v$ belongs to a star.  
+Next, the GrB\_extract function extracts the parents of vertices in stars. Here, we again use \id{star} as an output mask.
 Finally, the GrB\_assign function updates the parents of the roots of stars when possible.
 
 \begin{algorithm}[htbp]
@@ -188,15 +184,17 @@ Finally, the GrB\_assign function updates the parents of the roots of stars when
 \end{algorithm}
 
 \subsection{Unconditional hooking}
-Algorithm~\ref{algo:uncondHook} describes how we designed the unconditional hooking using three GraphBLAS operations.
-As shown in Algorithm~\ref{algo:Awerbuch-Shiloach},  unconditional hooking is very similar to conditional hooking  with the only different is that unconditional hooking allows a star to hook with any other tree without any restriction on the order of vertices.
+Algorithm~\ref{algo:uncondHook} describes how we designed unconditional hooking using three GraphBLAS operations.
+As shown in Algorithm~\ref{algo:Awerbuch-Shiloach},  unconditional hooking is very similar to conditional hooking. The only difference between these two hooking operations is that unconditional hooking allows a star to hook with any other tree without any restriction on the order of vertices.
 However, unlike conditional hooking where a star can hook to another star or nonstar, conditional hooking enables hooking a star onto a nonstar only. 
 This allows us to use a sparse vector $f_{nonstar}$ as an input to GrB\_mxv, where $f_{nonstar}$ is the subset of vertices belonging to nonstar trees. 
-Hence, GrB\_mxv in  Algorithm~\ref{algo:uncondHook} multiply the adjacency matrix $\mA$ of the graph by the sparse vector $f_{nonstar}$ on a (Select2nd, min) semiring. 
+Hence, GrB\_mxv in  Algorithm~\ref{algo:uncondHook} multiplies the adjacency matrix $\mA$ of the graph by the sparse vector $f_{nonstar}$ on a (Select2nd, min) semiring. 
 In fact, (Select2nd, min) semiring is not strictly required here since the order of parents does not matter in unconditional hooking.
-As before, we masked the output in GrB\_mxv by the Boolean vector \id{star}.
-The output of GrB\_mxv is stored in $f_n$.  $f_n[v]$ stores the minimum parent of an adjacent vertex $w$ of $v$ where \id{star[v]} is true and \id{star[w]} is false.  
-Next, the GrB\_extract function extracts the parents of vertices in a star. Here we again use the \id{star} vector as an output mask.
+As before, we masked the output in GrB\_mxv by \id{star}.
+The output of GrB\_mxv is stored in $f_n$.  
+$f_n[v]$ stores the minimum parent of a vertex $w$ adjacent to $v$ such that $v$ belongs to a star but $v$ does not belong to a star.  
+Next, the GrB\_extract function extracts the parents of vertices in stars. 
+Here, we again use \id{star} as an output mask.
 Finally, the GrB\_assign function updates the parents of the roots of stars when possible.
 
 
@@ -245,13 +243,13 @@ Finally, the GrB\_assign function updates the parents of the roots of stars when
 
 
 \subsection{Shortcutting}
-Algorithm~\ref{algo:shortcut} describes how we designed the shortcutting using two GraphBLAS operations.
+Algorithm~\ref{algo:shortcut} describes how we designed shortcutting using two GraphBLAS operations.
 At first, we use  GrB\_extract to obtain the grand parent \id{gf} of every vertex. Next, we assign \id{gf} to the parent array by using the GrB\_assign operation.
 
 
 \section{Implementing the Awerbuch-Shiloach algorithm in CombBLAS}
 We use the CombBLAS framework~\cite{bulucc2011combinatorial} to implement the GraphBLAS primitives needed to implement the Awerbuch-Shiloach algorithm.
-Since CombBLAS does not directly support the masking operations, we filtered out the output after performing an operation (if masking is needed). 
+Since CombBLAS does not directly support the masking operations, we use element-wise filtering after performing an operation when masking is needed. 
 
 CombBLAS distributes its sparse matrices on a 2D $p_r \times p_c$ processor grid.
 Processor $P(i,j)$ stores the submatrix $\mA_{ij}$ of dimensions $(m/p_r)\times (n/p_c)$ in its local memory. 
@@ -264,15 +262,15 @@ For a distributed vector $v$, the syntax $v_{ij}$ denotes the local $n/p$ length
 The syntax $v_i$ denotes the hypothetical $n/p_r$ or $n/p_c$ length piece of the vector collectively owned by all the processors along the $i$th processor row $P(i, :)$ or column $P(:, i)$.
 
 
-\subsection{Analysis of the distributed algorithm}
-We measure communication by the number of {\em words} moved ($W$) and
-the number of {\em messages} sent ($S$). The cost of communicating a length $m$ message is $\alpha + \beta m$ where $\alpha$ is the
-latency and $\beta$ is the inverse bandwidth, both defined relative to the cost of a single arithmetic operation. Hence, an algorithm that
-performs $F$ arithmetic operations, sends $S$ messages, and moves $W$ words takes $T= F + \alpha S + \beta W$ time. 
-
-We previously analyzed~\cite{azad2016distributed} the complexity of SpMV because it is also a building block of parallel maximal matching algorithms.
-For ease of analysis, we assume that nonzeros are i.i.d. distributed in matrices and vectors. %,  $x$ is $\id{f}$ percent full, and $\mA$ has on average $d$ nonzeros per column. 
-We also assume a square processor grid $p_c{=}p_r{=}\sqrt{p}$. Number of iterations is denoted by $\left\vert{\mathrm{iters}} \right\vert$.
+%\subsection{Analysis of the distributed algorithm}
+%We measure communication by the number of {\em words} moved ($W$) and
+%the number of {\em messages} sent ($S$). The cost of communicating a length $m$ message is $\alpha + \beta m$ where $\alpha$ is the
+%latency and $\beta$ is the inverse bandwidth, both defined relative to the cost of a single arithmetic operation. Hence, an algorithm that
+%performs $F$ arithmetic operations, sends $S$ messages, and moves $W$ words takes $T= F + \alpha S + \beta W$ time. 
+%
+%We previously analyzed~\cite{azad2016distributed} the complexity of SpMV because it is also a building block of parallel maximal matching algorithms.
+%For ease of analysis, we assume that nonzeros are i.i.d. distributed in matrices and vectors. %,  $x$ is $\id{f}$ percent full, and $\mA$ has on average $d$ nonzeros per column. 
+%We also assume a square processor grid $p_c{=}p_r{=}\sqrt{p}$. Number of iterations is denoted by $\left\vert{\mathrm{iters}} \right\vert$.
 
 %We leverage the 2D SpMV algorithms implemented in CombBLAS.
 %The complexity of the parallel SpMSpV algorithm has been analyzed in this context recently~\cite{matchingipdps16}, hence we just state

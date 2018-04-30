@@ -90,7 +90,7 @@ Only one thread in every process makes MPI calls in the communication rounds (th
 \begin{figure*}[!t]
    \centering
    \includegraphics[scale=.5]{figures/hipmcl} % requires the graphicx package
-   \caption{Performance improvement by LACC when used in HipMCL over the default shared-memory CC algorithm used in MCL. This result is obtained when clustering eukaryotic network with 3 million nodes and 359 million edges on NERSC/Edison.}
+   \caption{Performance improvement by LACC when used in HipMCL over the default shared-memory connected component algorithm used in MCL. This result is obtained when clustering eukaryotic network with 3 million nodes and 359 million edges on NERSC/Edison.}
    \label{fig:hipmcl}
 \end{figure*}
 
@@ -100,7 +100,7 @@ Table~\ref{table:problem-statistics} describes two protein similarity networks u
 These networks were generated from proteins from the isolate genomes hosted
 by the IMG platform at the Joint Genome Institute (JGI). For each dataset, we used the sequence aligner LAST~\cite{kielbasa2011adaptive} in order to construct the all-against-all adjacency matrix
 by keeping all similarities above 30\% and at 70\% length coverage bidirectionally between the longest and shortest aligned sequences. 
-These two networks were part of a larger collection protein similarity networks  used to evaluate HipMCL~\cite{hipmcl}. 
+These two networks were part of a larger collection of protein similarity networks  used to evaluate HipMCL~\cite{hipmcl}. 
 
 
 
@@ -110,17 +110,17 @@ These two networks were part of a larger collection protein similarity networks 
 
 
 \subsection{Performance of LACC with respect to the state-of-the-art}
-We compare the performance of LACC with a parconnect~\cite{jain2017adaptive}, a recently developed distributed-memory connected component algorithm. 
+We compare the performance of LACC with parconnect~\cite{jain2017adaptive}, a recently published distributed-memory connected component algorithm. 
 Parconnect is based on the Shiloach-Vishkin algorithm and has been shown to outperform previous state-of-the art parallel connected component algorithms~\cite{slota2014bfs}.
 
-Figure \ref{fig:eukarya} and \ref{fig:isolates} shows the runtime of LACC and parconnect when finding connected components in eukarya and isolate-genome networks, respectively.
+Figure \ref{fig:eukarya} and \ref{fig:isolates} show the runtime of LACC and parconnect when finding connected components in eukarya and isolate-genome networks, respectively.
 These results shows that on these two networks, LACC outperforms parconnect by more than a factor of two on all concurrencies.
 The performance gap is more significant on low concurrencies (on 4 nodes or 272 cores) where LACC is $~8\times$ faster than parconnect.
-The better performance of LACC on low concurrency indicates that our linear algebraic primitives are well optimized for single-node performance of the Awerbuch-Shiloach algorithm.
+The better performance of LACC on low concurrency indicates that our linear algebraic primitives are well optimized for single-node performance.
 However, we might need to adapt the primitives to better capture the computational patterns of the Awerbuch-Shiloach algorithm. 
-For example, the conditional hooking (Algorithm~\ref{algo:condHook}) can be better captured by a bottom up search from vertices belonging to stars, which could avoid some redundant work performed in SpMV.
+For example, the conditional hooking (Algorithm~\ref{algo:condHook}) can be better captured by a bottom-up search from vertices belonging to stars, which could avoid some redundant work performed in SpMV.
 Furthermore, our empirical results show that SpMV scales by a factor of $\sqrt{p}$ when the number of processes is increased by a factor of $p$.
-We will continue to improve LACC to improve its performance on high concurrencies. 
+We will continue to improve LACC with an aim to improve its performance on high concurrencies. 
 
 
 

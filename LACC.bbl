@@ -25,6 +25,18 @@
 S.~M. Van~Dongen, ``Graph clustering by flow simulation,'' Ph.D. dissertation,
   2000.
 
+\bibitem{pothen1990computing}
+A.~Pothen and C.-J. Fan, ``Computing the block triangular form of a sparse
+  matrix,'' \emph{ACM Transactions on Mathematical Software (TOMS)}, vol.~16,
+  no.~4, pp. 303--324, 1990.
+
+\bibitem{thornquist2009parallel}
+H.~K. Thornquist, E.~R. Keiter, R.~J. Hoekstra, D.~M. Day, and E.~G. Boman, ``A
+  parallel preconditioning strategy for efficient transistor-level circuit
+  simulation,'' in \emph{Proceedings of the 2009 International Conference on
+  Computer-Aided Design}.\hskip 1em plus 0.5em minus 0.4em\relax ACM, 2009, pp.
+  410--417.
+
 \bibitem{hipmcl}
 A.~Azad, G.~A. Pavlopoulos, C.~A. Ouzounis, N.~C. Kyrpides, and A.~Bulu{\c{c}},
   ``{HipMCL}: A high-performance parallel implementation of the {M}arkov

@@ -1,24 +1,24 @@
-\begin{figure*}[htbp]
+\begin{figure*}[!t]
    \centering
-   \includegraphics[scale=.45]{figures/example} % requires the graphicx package
-   \caption{example caption}
+   \includegraphics[scale=.45]{figures/example} 
+   \caption{An illustrative example of the the Awerbuch-Shiloach algorithm. Edges in the graph are shown in solid black edges. The parent of a vertex is shown with a dashed arrowhead directed from a child to its parent. (a) An undirected and unweighted graph with seven vertices and five edges. (b) Initially, every vertex forms a singleton tree. (c) After conditional hooking of stars. Here we only show edges connected vertices in different trees. (d) Identification of vertices in stars (see Figure~\ref{fig:starcheck}). (e) After unconditional hooking of stars rooted at vertex 1. (f) After shortcutting in the only remaining tree. }
    \label{fig:example}
 \end{figure*}
 
 
 
-\begin{figure*}[htbp]
+\begin{figure*}[!t]
    \centering
-   \includegraphics[scale=.45]{figures/starcheck} % requires the graphicx package
-   \caption{example caption}
+   \includegraphics[scale=.45]{figures/starcheck} 
+   \caption{Finding all vertices belonging stars. A Boolean array $star$ is maintained where $star[v]$ is $true$ if $v$ belongs to a star and $star[v]$ is $false$ otherwise. In this figure, a vertex belonging to a star is shown with an unfilled circle and a vertex  not belonging to a star is shown with a filled circle. The parent of a vertex is shown with a dashed arrowhead directed from a child to its parent. (a) Initially, every vertex is assumed to be part a star. (b) In a nonstar tree, we mark all vertices at level not equal to 1. (c) In a nonstar tree, we mark all vertices at level equal to 1.}
    \label{fig:starcheck}
 \end{figure*}
 
 
-\begin{algorithm}[htbp]
+\begin{algorithm}[!t]
 \begin{algorithmic}[1]
 \begin{small}
-\Procedure{Awerbuch-Shiloach}{$G(V,E), f$}
+\Procedure{Awerbuch-Shiloach}{$G(V,E)$}
 	\LineComment{\textcolor{blue}{Initialization }}
 	\For {every vertex $v$ in $V$}
 		\State $f[v] \gets u$
@@ -48,15 +48,17 @@
 		\EndIf
 	\EndFor
 	\Until{$f$ reamins unchanged}
+	\State \Return $f$
 \EndProcedure
 \end{small}
 \end{algorithmic}
-\caption{The skeleton of the Awerbuch-Shiloach algorithm.}
+\caption{The skeleton of the Awerbuch-Shiloach algorithm. {\bf Inputs:} an undirected graph $G(V, E)$.
+{\bf Output:}  An array $f$ storing the final parent of every vertex.}
 \label{algo:Awerbuch-Shiloach}
 \end{algorithm}
 
 
-\begin{algorithm}[htbp]
+\begin{algorithm}[!t]
 \begin{algorithmic}[1]
 \begin{small}
 \Procedure{Starcheck}{$G(V,E), f$}
@@ -78,11 +80,12 @@
 	\For {every vertex $v$ in $V$} {\bf in parallel }
 		\State $star[v] \gets star[f[v]]$
 	\EndFor
-	
+	\State \Return $star$
 \EndProcedure
 \end{small}
 \end{algorithmic}
-\caption{Finding vertices belonging to stars.}
+\caption{Finding vertices belonging to stars. {\bf Inputs:} an undirected graph $G(V, E)$ and an array $f$ storing the  parent of every vertex.
+{\bf Output:}  A Boolean array $star$ where $star[v]$ is $true$ if $v$ belongs to a star.}
 \label{algo:Starcheck}
 \end{algorithm}
 
@@ -91,7 +94,7 @@
 The Awerbuch-Shiloach algorithm maintains a forest data structure where each tree represents a connected component at the current stage of the algorithm.
 A tree is called a \emph{star} if every vertex is a child of the root (i.e., the height of three is at most one).
 The Awerbuch-Shiloach algorithm begins with singleton trees (stars) corresponding to each vertex in the graph.
-In every iteration, we merge stars with other trees (both star and nonstars) until no such merging is possible. 
+In every iteration, the algorithm merges stars with other trees (both stars and nonstars) until no such merging is possible. 
 This merging is called ``hooking" in the Awerbuch-Shiloach algorithm and is performed in two steps: (a) conditional hooking and (b) unconditional hooking. These steps are described below.
 Between two subsequent iterations, the algorithm reduces the hight of trees by pointer jumping, a process known as shortcutting. 
 Note that the Awerbuch-Shiloach algorithm is a simplification of the Shiloach-Vishkin algorithm~\cite{shiloach1980log}. While Shiloach-Vishkin allows hooking a tree to another tree, Awerbuch-Shiloach only allows hooking a star onto another tree. Hooking stars instead of trees simplifies the hooking process and eliminate the need of some auxiliary data structures needed by the Shiloach-Vishkin algorithm.
@@ -99,15 +102,20 @@ Note that the Awerbuch-Shiloach algorithm is a simplification of the Shiloach-Vi
 In the Awerbuch-Shiloach algorithm, vertex $u$ maintains a parent $f[u]$ which is another vertex or itself. 
 This parent-child relationship forms a directed forest where the root $u$ of a tree satisfies $f[u]=u$.
 Algorithm \ref{algo:Awerbuch-Shiloach} describes the overview of the Awerbuch-Shiloach algorithm.
-Initially every vertex forms a separate star. 
-In each iteration, the algorithm performs three steps conditional (a) conditional hooking, (b) unconditional hooking and (c) shortcutting.
-Each of these three steps can be done in parallel as shown in Algorithm \ref{algo:Awerbuch-Shiloach}.
+Initially, every vertex forms a separate star. 
+In each iteration, the algorithm performs three operations: (a) conditional hooking, (b) unconditional hooking and (c) shortcutting.
+Each of these three steps can be done in parallel as shown in Algorithm~\ref{algo:Awerbuch-Shiloach}.
 Figure~\ref{fig:example} shows the execution of different steps of the Awerbuch-Shiloach algorithm.
 
-Algorithm~\ref{algo:Starcheck} is used to identify vertices belonging to stars.
-Figure~\ref{fig:starcheck} shows a running example of finding vertices in stars in the trees from Figure~\ref{fig:example}(d).
+Algorithm~\ref{algo:Awerbuch-Shiloach} and Figure~\ref{fig:example} assumed that the set of vertices belonging to stars is available.  
+To track the star memberships, the algorithm maintains a Boolean array $star$ where $star[v]$ is $true$ if $v$ belongs to a star.
+However, it is not straightforward to identify those vertices (in stars) given the parent-child relationship in the array $f$.
+Figure~\ref{fig:starcheck} shows a running example of finding vertices in stars in a trees obtained from Figure~\ref{fig:example}(d).
+As shown in Figure~\ref{fig:starcheck}, three steps are needed to populate the $star$ array. 
+Algorithm~\ref{algo:Starcheck} describes these steps.
 
-The Awerbuch-Shiloach algorithm terminates when every tree becomes a star and the parent array is not updated in the latest iteration. 
+
+The Awerbuch-Shiloach algorithm terminates when every tree becomes a star and the parent array $f$ is not updated in the latest iteration. 
 Awerbuch and Shiloach showed that the algorithm terminates in $O(\log n)$ iterations. Hence, using $m+n$ processors, the algorithm has $O(\log n)$ complexity in a PRAM model. 
 
 

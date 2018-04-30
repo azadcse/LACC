@@ -1,19 +1,19 @@
 \section{Introduction}
-Given an undirected graph $G(V, E)$ on the set of vertices $V$ and the set of edges $E$, a connected component is a subgraph in which every vertex is connected to all other vertices in the subgraph by paths and is not connected to any other vertex outside of the subgraph.  
-Finding all connected components in an undirected graph is a well studied problem in graph theory with applications in bioinformatics and scientific computing. 
+Given an undirected graph $G(V, E)$ on the set of vertices $V$ and the set of edges $E$, a connected component is a subgraph in which every vertex is connected to all other vertices in the subgraph by paths and no vertex in the subgraph is connected to any other vertex outside of the subgraph.  
+Finding all connected components in a graph is a well studied problem in graph theory with applications in bioinformatics~\cite{van2000graph} and scientific computing~\cite{pothen1990computing, thornquist2009parallel}. 
 
-One particular application of connected components arises in large scale biological network clustering by Markov Clustering algorithm (MCL)~\cite{van2000graph}. 
+One particular application of connected components arises in large scale biological network clustering by Markov clustering algorithm (MCL)~\cite{van2000graph}. 
 MCL iteratively performs a series of sparse matrix manipulations to identify the clustering structure in a network. 
 After the iterations converge, the clusters are extracted by finding the weakly-connected components of the final converged matrix.  This is equivalent to finding connected components on the symmetrized version of the final converged matrix, i.e., in an undirected graph represented by the converged matrix. 
 In an effort to cluster large-scale networks, we have recently developed the distributed-memory parallel MCL (HipMCL)~\cite{hipmcl} algorithm.
 HipMCL can cluster protein similarity networks with hundreds of billions of edges using thousands of nodes on modern supercomputers. 
-Hence, we aim develop a parallel connected component algorithm that can scale to thousands of nodes. 
+Since computing connected components is an important step in HipMCL, we aim develop a parallel connected component algorithm that can scale to thousands of nodes. 
 
 HipMCL is developed using linear algebraic primitives of the of Combinatorial BLAS (CombBLAS) library~\cite{bulucc2011combinatorial}. 
 CombBLAS provides distributed-memory parallel primitives including sparse matrix-vector multiplication (SpMV) and sparse matrix-matrix multiplication (SpGEMM). 
-CombBLAS primitives are equivalent to the recently developed GraphBLAS primitives~\cite{bulucc2017design} and can be used to develop high-performance graph algorithms quickly and efficiently. 
+CombBLAS primitives are somewhat equivalent to the recently developed GraphBLAS primitives~\cite{bulucc2017design} and can be used to develop high-performance graph algorithms quickly and efficiently. 
 Hence, we primarily focus on a connected component algorithm than can be efficiently decomposed into linear algebraic primitives. 
-For this reason, we selected the Awerbuch-Shiloach algorithm~\cite{awerbuch1987new} and developed a parallel decomposition of the algorithm using GraphBLAS primitives (hence the algorithm is named LACC). This algorithm is chosen for its simplicity, performance guarantees, and suitability to Combinatorial BLAS. 
+For this reason, we selected the Awerbuch-Shiloach algorithm~\cite{awerbuch1987new} and developed a parallel decomposition of the algorithm using GraphBLAS primitives (hence our algorithm is named as LACC). The Awerbuch-Shiloach algorithm  is chosen for its simplicity, performance guarantees, and suitability to Combinatorial BLAS. 
 
 
 
